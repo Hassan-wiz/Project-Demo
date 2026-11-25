@@ -1,0 +1,672 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>CampusConnect</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky brand + scrolling tab bar, one module per view, cards on a cool grey ground. Campus-signage blue is the single accent; each building type on the map has its own hue. */
+:root{
+  --bg:#F2F5F8; --surface:#FFFFFF; --ink:#13202D; --muted:#566879; --line:#D6DFE8;
+  --accent:#1D5FD1; --accent-ink:#FFFFFF; --accent-soft:#E3ECFB;
+  --good:#18794E; --good-bg:#DCF2E6; --warn:#955406; --warn-bg:#FBEAC8; --bad:#B42318; --bad-bg:#FBE1DE;
+  --t-acad:#2B6CD9; --t-lab:#7A4FD0; --t-food:#C0701A; --t-lib:#13866F; --t-sport:#C23F5B; --t-admin:#5F7183; --t-ground:#3E8E5A;
+  --font-display:"Space Grotesk",Inter,system-ui,sans-serif;
+  --font-body:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1520; --surface:#15202C; --ink:#E6EDF4; --muted:#9AA9B8; --line:#273646;
+    --accent:#6FA4FF; --accent-ink:#0D1520; --accent-soft:#1B2D4A;
+    --good:#5DD79C; --good-bg:#12362B; --warn:#F2B55C; --warn-bg:#3A2C10; --bad:#FF8E80; --bad-bg:#40201C;
+    --t-acad:#6FA4FF; --t-lab:#B196F2; --t-food:#EFA35A; --t-lib:#52CDB0; --t-sport:#F08AA2; --t-admin:#9AA9B8; --t-ground:#6CCB8F;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1520; --surface:#15202C; --ink:#E6EDF4; --muted:#9AA9B8; --line:#273646;
+  --accent:#6FA4FF; --accent-ink:#0D1520; --accent-soft:#1B2D4A;
+  --good:#5DD79C; --good-bg:#12362B; --warn:#F2B55C; --warn-bg:#3A2C10; --bad:#FF8E80; --bad-bg:#40201C;
+  --t-acad:#6FA4FF; --t-lab:#B196F2; --t-food:#EFA35A; --t-lib:#52CDB0; --t-sport:#F08AA2; --t-admin:#9AA9B8; --t-ground:#6CCB8F;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--surface)}
+h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0;line-height:1.15;letter-spacing:-.01em}
+h2{font-size:1.55rem}
+h3{font-size:1.05rem}
+p{margin:0}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.brand-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:12px 8px}
+.brand{font-family:var(--font-display);font-weight:700;font-size:1.25rem;display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.logo{width:28px;height:28px;border-radius:7px;background:var(--accent);display:grid;place-items:center}
+.logo svg{width:18px;height:18px}
+.demo-tag{font-family:var(--font-mono);font-size:.72rem;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:2px 8px;white-space:nowrap}
+nav{display:flex;gap:4px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav a{white-space:nowrap;text-decoration:none;color:var(--muted);font-weight:500;font-size:.9rem;padding:6px 12px;border-radius:8px}
+nav a:hover{background:var(--accent-soft);color:var(--ink)}
+nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+
+main{padding-block:24px 56px}
+.view{display:flex;flex-direction:column;gap:20px}
+.view[hidden]{display:none}
+.lead{color:var(--muted);max-width:62ch}
+.head{display:flex;flex-direction:column;gap:6px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card.flat{border-radius:10px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px}
+.split>*{min-width:0}
+.muted{color:var(--muted)}
+.mono{font-family:var(--font-mono)}
+.small{font-size:.85rem}
+
+.pill{display:inline-block;font-size:.76rem;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.pill.good{background:var(--good-bg);color:var(--good)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.pill.info{background:var(--accent-soft);color:var(--accent)}
+.pill.mute{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+
+.btn{font:inherit;font-weight:600;font-size:.9rem;border-radius:9px;padding:9px 16px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.sm{padding:6px 11px;font-size:.82rem}
+.btn[disabled]{opacity:.45;cursor:not-allowed;filter:none}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font:inherit;font-size:.86rem;font-weight:500;padding:6px 13px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label{font-size:.8rem;font-weight:600;color:var(--muted);letter-spacing:.03em;text-transform:uppercase}
+input,select,textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px 11px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:72px}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:12px;align-items:end}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,130px),1fr));gap:12px}
+.stat{background:var(--bg);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-family:var(--font-display);font-size:1.6rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:.8rem;color:var(--muted)}
+
+/* Home */
+.hero{display:flex;flex-direction:column;gap:12px}
+.hero h1{font-size:clamp(1.9rem,6vw,3rem);max-width:18ch}
+.today{display:flex;gap:10px;flex-wrap:wrap}
+.mods{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px}
+.mod{display:flex;flex-direction:column;gap:6px;text-decoration:none;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.mod:hover{border-color:var(--accent)}
+.mod h3{display:flex;align-items:center;gap:8px}
+.mod p{color:var(--muted);font-size:.88rem}
+.dot{width:10px;height:10px;border-radius:3px;background:var(--c,var(--accent));flex:none}
+.notice-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.notice-list li{display:flex;gap:10px;align-items:baseline}
+.notice-list time{font-family:var(--font-mono);font-size:.76rem;color:var(--muted);flex:none}
+
+/* Map */
+.map-box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px}
+.map-box svg{display:block;width:100%;height:auto}
+.blk{fill:color-mix(in srgb,var(--t) 16%,var(--surface));stroke:var(--t);stroke-width:2;transition:stroke-width .1s}
+.blk-g{cursor:pointer}
+.blk-g:hover .blk,.blk-g:focus-visible .blk{stroke-width:4}
+.blk-g.sel .blk{stroke-width:5;fill:color-mix(in srgb,var(--t) 30%,var(--surface))}
+.blk-g:focus-visible{outline:none}
+.blk-t{font-family:var(--font-display);font-weight:600;font-size:19px;fill:var(--ink);text-anchor:middle;pointer-events:none}
+.route{stroke:var(--ink);stroke-width:3;stroke-dasharray:8 6;fill:none}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);padding:8px 6px 2px}
+.legend span{display:flex;align-items:center;gap:6px}
+
+/* Schedule + rooms */
+.slots{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.slot{display:grid;grid-template-columns:104px 1fr auto;gap:12px;align-items:center;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface)}
+.slot .time{font-family:var(--font-mono);font-size:.82rem;color:var(--muted)}
+.slot.free{background:transparent;border-style:dashed}
+.slot.free .what{color:var(--muted)}
+.slot.now{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.what{min-width:0}
+.what b{font-weight:600}
+@media (max-width:480px){.slot{grid-template-columns:1fr auto}.slot .time{grid-column:1/-1}}
+.rooms-grid{display:flex;flex-wrap:wrap;gap:6px}
+.room{font-family:var(--font-mono);font-size:.8rem;padding:4px 9px;border-radius:7px;border:1px solid var(--line)}
+.room.free{background:var(--good-bg);color:var(--good);border-color:transparent}
+.room.busy{background:var(--bg);color:var(--muted);text-decoration:line-through}
+.group-title{font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:14px 0 8px}
+
+/* Store */
+.items{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.itm{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.itm-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.bar{height:8px;border-radius:99px;background:var(--bg);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--good);border-radius:99px}
+.itm-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:.84rem;color:var(--muted)}
+.itm-meta b{color:var(--ink);font-variant-numeric:tabular-nums}
+.itm-act{display:flex;gap:6px;flex-wrap:wrap}
+.resv{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.resv li{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+
+/* Events, jobs, library, cafe */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.ev{display:grid;grid-template-columns:62px 1fr;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.datebox{border-radius:10px;background:var(--accent-soft);color:var(--accent);text-align:center;padding:8px 0;align-self:start}
+.datebox b{display:block;font-family:var(--font-display);font-size:1.5rem;line-height:1}
+.datebox span{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.ev h3,.job h3{margin-bottom:4px}
+.job{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+dl.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:.88rem}
+dl.kv dt{color:var(--muted)}
+dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.shelf{display:flex;flex-direction:column;gap:6px}
+.book{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.book:last-child{border-bottom:0}
+.book .who{color:var(--muted);font-size:.85rem}
+.menu{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.menu li{display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.menu li:last-child{border-bottom:0}
+.price{font-family:var(--font-mono);font-size:.9rem;font-variant-numeric:tabular-nums}
+@media (max-width:480px){.menu li{grid-template-columns:1fr auto}.menu li .pill{grid-column:1}}
+.stepper{display:inline-flex;align-items:center;gap:8px}
+.stepper output{min-width:2ch;text-align:center;font-variant-numeric:tabular-nums;font-weight:600}
+
+pre.console{margin:0;background:#0C141C;color:#B9F5CF;font-family:var(--font-mono);font-size:.82rem;line-height:1.35;border-radius:10px;padding:14px;overflow-x:auto}
+ul.plain{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:.88rem;font-weight:500;z-index:40;max-width:calc(100% - 32px);opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header>
+  <div class="wrap">
+    <div class="brand-row">
+      <a class="brand" href="#home">
+        <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6"/><path d="M5 10v9M19 10v9M9 19v-6h6v6M3 19h18"/></svg></span>
+        CampusConnect
+      </a>
+      <span class="demo-tag">web demo · sample data</span>
+    </div>
+    <nav id="nav" aria-label="Modules"></nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- HOME -->
+<section class="view" id="v-home" hidden>
+  <div class="hero">
+    <h1>Your whole campus in one menu.</h1>
+    <p class="lead">Maps, timetables, free rooms, sports gear, events, jobs, books and today's cafeteria menu. No module is the main one; pick whatever you need right now.</p>
+    <div class="today" id="today"></div>
+  </div>
+  <div class="mods" id="mods"></div>
+  <div class="split">
+    <div class="card"><h3 style="margin-bottom:12px">Notices</h3><ul class="notice-list" id="notices"></ul></div>
+    <div class="card"><h3 style="margin-bottom:12px">Coming up</h3><ul class="notice-list" id="home-events"></ul></div>
+  </div>
+</section>
+
+<!-- MAP -->
+<section class="view" id="v-map" hidden>
+  <div class="head"><h2>Campus map</h2><p class="lead">Tap a building to see what is inside. Pick two places to get a walking estimate.</p></div>
+  <div class="map-box">
+    <svg id="map" viewBox="0 0 720 410" role="group" aria-label="Campus map"></svg>
+    <div class="legend" id="legend"></div>
+  </div>
+  <div class="split">
+    <div class="card" id="blk-info"></div>
+    <div class="card">
+      <h3 style="margin-bottom:12px">Walking route</h3>
+      <div class="form-grid">
+        <div class="field"><label for="r-from">From</label><select id="r-from"></select></div>
+        <div class="field"><label for="r-to">To</label><select id="r-to"></select></div>
+      </div>
+      <p id="route-out" class="muted" style="margin-top:12px"></p>
+    </div>
+  </div>
+</section>
+
+<!-- SCHEDULE -->
+<section class="view" id="v-schedule" hidden>
+  <div class="head"><h2>My schedule</h2><p class="lead">Enter your details and see your classes, free time and busy time for the day.</p></div>
+  <form class="card" id="s-form">
+    <div class="form-grid">
+      <div class="field"><label for="s-roll">Roll number</label><input id="s-roll" value="26-CS-014" autocomplete="off"></div>
+      <div class="field"><label for="s-dept">Department</label><select id="s-dept"><option>CS</option><option>IT</option><option>SE</option></select></div>
+      <div class="field"><label for="s-sec">Section</label><select id="s-sec"><option>A</option><option>B</option></select></div>
+      <div class="field"><label for="s-day">Day</label><select id="s-day"></select></div>
+      <button class="btn" type="submit">Show schedule</button>
+    </div>
+  </form>
+  <div id="s-out" class="view"></div>
+</section>
+
+<!-- ROOMS -->
+<section class="view" id="v-rooms" hidden>
+  <div class="head"><h2>Free room finder</h2><p class="lead">Rooms and labs with no class in the chosen slot, worked out from every timetable. Good for study groups.</p></div>
+  <div class="card">
+    <div class="form-grid">
+      <div class="field"><label for="f-day">Day</label><select id="f-day"></select></div>
+      <div class="field"><label for="f-slot">Time slot</label><select id="f-slot"></select></div>
+    </div>
+  </div>
+  <div class="card" id="f-out"></div>
+</section>
+
+<!-- STORE -->
+<section class="view" id="v-store" hidden>
+  <div class="head"><h2>Sports store</h2><p class="lead">See what is on the shelf before you walk over. Reserve with your university ID and collect at your slot. The keeper keeps the numbers up to date.</p></div>
+  <div class="row" style="justify-content:space-between">
+    <div class="chips"><input id="st-q" type="search" placeholder="Search items" aria-label="Search items" style="max-width:240px"></div>
+    <button class="btn ghost sm" id="keeper-toggle" aria-pressed="false">Keeper mode: off</button>
+  </div>
+  <ul class="items" id="store-list"></ul>
+  <form class="card" id="res-panel" hidden>
+    <h3 id="res-title" style="margin-bottom:12px"></h3>
+    <div class="form-grid">
+      <div class="field"><label for="res-id">University ID</label><input id="res-id" placeholder="e.g. 26-CS-014" autocomplete="off"></div>
+      <div class="field"><label for="res-slot">Pick-up time</label><select id="res-slot"></select></div>
+      <button class="btn" type="submit">Confirm reservation</button>
+    </div>
+    <p class="small muted" style="margin-top:10px">Use your university ID, never your CNIC.</p>
+  </form>
+  <div class="card"><h3 style="margin-bottom:12px">Reservations</h3><ul class="resv" id="resv"></ul></div>
+</section>
+
+<!-- EVENTS -->
+<section class="view" id="v-events" hidden>
+  <div class="head"><h2>Events</h2><p class="lead">Everything happening at the university, from society meetups to international conferences.</p></div>
+  <div class="chips" id="ev-chips"></div>
+  <div class="cards" id="ev-list"></div>
+</section>
+
+<!-- JOBS -->
+<section class="view" id="v-jobs" hidden>
+  <div class="head"><h2>Jobs</h2><p class="lead">Part-time work, internships, research and TA openings on campus.</p></div>
+  <div class="chips" id="job-chips"></div>
+  <div class="cards" id="job-list"></div>
+</section>
+
+<!-- LIBRARY -->
+<section class="view" id="v-library" hidden>
+  <div class="head"><h2>Library</h2><p class="lead">Browse by section and see how many copies are on the shelf. Nothing to book: just walk in and pick it up.</p></div>
+  <div class="row"><input id="lib-q" type="search" placeholder="Search title or author" aria-label="Search books" style="max-width:300px"></div>
+  <div class="chips" id="lib-chips"></div>
+  <div class="split" id="lib-list"></div>
+</section>
+
+<!-- CAFETERIA -->
+<section class="view" id="v-cafeteria" hidden>
+  <div class="head"><h2>Cafeteria</h2><p class="lead" id="caf-lead"></p></div>
+  <div class="card"><ul class="menu" id="menu"></ul></div>
+</section>
+
+<!-- ADMIN -->
+<section class="view" id="v-admin" hidden>
+  <div class="head"><h2>Admin panel</h2><p class="lead">For staff only. Changes show up in every module straight away.</p></div>
+  <div id="admin-body" class="view"></div>
+</section>
+
+<!-- ABOUT -->
+<section class="view" id="v-about" hidden>
+  <div class="head"><h2>About the project</h2><p class="lead">This page is a presentation mockup. The real CampusConnect is a C++ console program for the first-semester PF lab, and every screen here is a menu option in it. Data is saved in files, and the map is drawn with characters and colors.</p></div>
+  <div class="split">
+    <div class="card"><h3 style="margin-bottom:12px">Main menu in the console version</h3><pre class="console" id="console"></pre></div>
+    <div class="card"><h3 style="margin-bottom:12px">Who builds what</h3>
+      <ul class="plain">
+        <li><b>Person 1:</b> map, main menu, colors</li>
+        <li><b>Person 2:</b> login and student schedule</li>
+        <li><b>Person 3:</b> sports store and keeper login</li>
+        <li><b>Person 4:</b> free rooms, library, cafeteria, notices</li>
+        <li><b>Person 5:</b> events, jobs, admin panel, file handling</li>
+      </ul>
+    </div>
+  </div>
+  <div class="split">
+    <div class="card"><h3 style="margin-bottom:12px">Three weeks</h3>
+      <ul class="plain">
+        <li><b>Week 1:</b> agree on shared structs and file formats, build the menu, map and a skeleton for each module.</li>
+        <li><b>Week 2:</b> finish every module and connect them to the hub.</li>
+        <li><b>Week 3:</b> testing, polish, bug fixes and a demo script.</li>
+      </ul>
+    </div>
+    <div class="card"><h3 style="margin-bottom:12px">C++ topics it covers</h3>
+      <p class="muted">Structs, arrays and 2D arrays, functions, strings, loops, file handling and <span class="mono">&lt;ctime&gt;</span>. Nothing beyond the first-semester course.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let toastT; function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),2400)}
+
+/* ---------- time ---------- */
+const TODAY=new Date();
+const DAYS=["Mon","Tue","Wed","Thu","Fri"];
+const dayName=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][TODAY.getDay()];
+const isWeekday=DAYS.includes(dayName);
+const dayIdx=isWeekday?DAYS.indexOf(dayName):0;
+const SLOTS=[["08:30","10:00"],["10:00","11:30"],["11:30","13:00"],["14:00","15:30"],["15:30","17:00"]];
+const toMin=t=>{const[h,m]=t.split(":");return +h*60+ +m};
+const nowMin=TODAY.getHours()*60+TODAY.getMinutes();
+const curSlot=isWeekday?SLOTS.findIndex(([a,b])=>nowMin>=toMin(a)&&nowMin<toMin(b)):-1;
+const startOfToday=new Date(TODAY.getFullYear(),TODAY.getMonth(),TODAY.getDate());
+const daysUntil=iso=>Math.round((new Date(iso+"T00:00")-startOfToday)/864e5);
+const fmt=(iso,o)=>new Date(iso+"T00:00").toLocaleDateString("en-GB",o);
+const isoPlus=n=>{const d=new Date(startOfToday);d.setDate(d.getDate()+n);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const when=iso=>{const n=daysUntil(iso);return n<0?"Passed":n===0?"Today":n===1?"Tomorrow":"In "+n+" days"};
+
+/* ---------- timetables (sample) ---------- */
+const BASE={
+  Mon:["Programming Fundamentals@A-101","Calculus@A-102","","PF Lab@Lab-2","PF Lab@Lab-2"],
+  Tue:["Applied Physics@A-104","","English Composition@A-101","ICT@A-103",""],
+  Wed:["Programming Fundamentals@A-101","Calculus@A-102","Islamiat@A-105","",""],
+  Thu:["","Applied Physics@A-104","English Composition@A-101","PF Lab@Lab-2","PF Lab@Lab-2"],
+  Fri:["ICT@A-103","Programming Fundamentals@A-101","","",""]
+};
+const DEPTS=["CS","IT","SE"], SECS=["A","B"], BLOCK_OF={CS:"A",IT:"B",SE:"C"};
+function buildTT(dept,sec){
+  const d=DEPTS.indexOf(dept), s=SECS.indexOf(sec), shift=(d*2+s)%5, out={};
+  DAYS.forEach((day,i)=>{
+    out[day]=BASE[DAYS[(i+shift)%5]].map(c=>{
+      if(!c) return null;
+      const [name,room]=c.split("@");
+      const r=room.startsWith("Lab-")?"Lab-"+(((+room.slice(4)+d+s-1)%5)+1):BLOCK_OF[dept]+"-"+(s?"2":"1")+room.slice(3);
+      return {name,room:r};
+    });
+  });
+  return out;
+}
+const ALL_TT={}; DEPTS.forEach(d=>SECS.forEach(s=>ALL_TT[d+"-"+s]=buildTT(d,s)));
+
+/* ---------- state ---------- */
+const state={
+  notices:[
+    {t:"Mid-term seating plan is on the notice board outside Block A.",d:isoPlus(0)},
+    {t:"The library closes at 4:00 PM on Friday.",d:isoPlus(-1)},
+    {t:"PF Lab OEL sessions continue in Lab-2 this week.",d:isoPlus(-2)}
+  ],
+  events:[
+    {title:"Society Orientation Day",date:isoPlus(3),venue:"Main Hall",type:"Society",desc:"Meet every student society and sign up for the ones you like."},
+    {title:"Blood Donation Drive",date:isoPlus(4),venue:"Cafeteria lawn",type:"Community",desc:"Run with the city hospital. Bring your university card."},
+    {title:"Intra-University Programming Contest",date:isoPlus(8),venue:"Lab Block",type:"Academic",desc:"Teams of three solve problems in C++, Python and Java."},
+    {title:"Career Fair",date:isoPlus(13),venue:"Main Hall",type:"National",desc:"Companies from across the country hiring interns and graduates."},
+    {title:"Inter-University Cricket Tournament",date:isoPlus(15),venue:"Sports Ground",type:"Sports",desc:"Eight universities, three days of matches."},
+    {title:"International Conference on AI and Data Science",date:isoPlus(20),venue:"Auditorium",type:"International",desc:"Speakers from four countries. Student posters welcome."}
+  ],
+  jobs:[
+    {title:"Teaching Assistant, Programming Fundamentals",dept:"CS",type:"Part-time",hours:"10 hours a week",deadline:isoPlus(9),req:"Grade A or A- in Programming Fundamentals and good C++ basics.",contact:"CS department office, Block A"},
+    {title:"Lab Assistant",dept:"IT",type:"Part-time",hours:"8 hours a week",deadline:isoPlus(6),req:"Comfortable with Windows and Linux. Helps keep labs running.",contact:"Lab Block office"},
+    {title:"Web Developer Intern, University Portal",dept:"SE",type:"Internship",hours:"Flexible",deadline:isoPlus(18),req:"HTML, CSS and JavaScript. A GitHub profile helps.",contact:"IT services, Admin Block"},
+    {title:"Library Assistant",dept:"All",type:"Part-time",hours:"6 hours a week",deadline:isoPlus(5),req:"Organised and reliable. Evening shifts available.",contact:"Library front desk"},
+    {title:"Research Assistant, Data Science Lab",dept:"CS",type:"Research",hours:"12 hours a week",deadline:isoPlus(22),req:"Python basics and interest in data. Second year or above.",contact:"Dr. office, Block A, room A-201"},
+    {title:"Events Volunteer",dept:"All",type:"Volunteer",hours:"Event days",deadline:isoPlus(12),req:"Friendly and punctual. Certificate provided.",contact:"Events office, Admin Block"}
+  ],
+  store:[
+    {name:"Cricket bat",total:10,out:4,res:0},
+    {name:"Cricket ball",total:24,out:9,res:0},
+    {name:"Football",total:12,out:12,res:0},
+    {name:"Basketball",total:8,out:3,res:0},
+    {name:"Volleyball",total:6,out:2,res:0},
+    {name:"Badminton racket",total:20,out:8,res:0},
+    {name:"Shuttlecock tube",total:30,out:8,res:0},
+    {name:"Tennis racket",total:8,out:5,res:0},
+    {name:"Table tennis paddle",total:16,out:6,res:0},
+    {name:"Chess set",total:6,out:0,res:0}
+  ],
+  resv:[{item:"Badminton racket",id:"26-IT-031",slot:"15:00"}],
+  cafe:[
+    {name:"Chicken biryani",price:350,left:24},
+    {name:"Daal chawal",price:180,left:40},
+    {name:"Chicken karahi plate",price:420,left:8},
+    {name:"Zinger burger",price:380,left:15},
+    {name:"Club sandwich",price:300,left:0},
+    {name:"Fries",price:150,left:30},
+    {name:"Samosa (2 pieces)",price:80,left:60},
+    {name:"Chai",price:60,left:100},
+    {name:"Fresh juice",price:200,left:6}
+  ],
+  keeper:false, admin:false, sel:-1, evType:"All", jobDept:"All", libSec:"All", libQ:"", stQ:"", block:"lab"
+};
+state.store[1].res=0; state.store[7].res=0;
+state.store.find(i=>i.name==="Badminton racket").res=1; state.store.find(i=>i.name==="Badminton racket").out=7;
+
+const LIB={
+  "English":[["Pride and Prejudice","Jane Austen",4],["1984","George Orwell",6],["To Kill a Mockingbird","Harper Lee",3],["The Elements of Style","Strunk and White",5],["Oxford Advanced Learner's Dictionary","Oxford",8]],
+  "Urdu":[["Bang-e-Dra","Allama Iqbal",5],["Aag Ka Darya","Qurratulain Hyder",2],["Udaas Naslain","Abdullah Hussain",3],["Raja Gidh","Bano Qudsia",4],["Peer-e-Kamil","Umera Ahmed",6]],
+  "Computer Programming":[["The C++ Programming Language","Bjarne Stroustrup",3],["C++ How to Program","Deitel and Deitel",7],["Programming: Principles and Practice Using C++","Bjarne Stroustrup",4],["Clean Code","Robert C. Martin",0],["Introduction to Algorithms","Cormen et al.",3]],
+  "Mathematics":[["Calculus","George B. Thomas",6],["Discrete Mathematics and Its Applications","Kenneth Rosen",4],["Introduction to Linear Algebra","Gilbert Strang",3]],
+  "Physics":[["University Physics","Young and Freedman",5],["Fundamentals of Physics","Halliday and Resnick",4]]
+};
+
+/* ---------- router ---------- */
+const VIEWS=[["home","Home"],["map","Map"],["schedule","Schedule"],["rooms","Free rooms"],["store","Sports store"],["events","Events"],["jobs","Jobs"],["library","Library"],["cafeteria","Cafeteria"],["admin","Admin"],["about","About"]];
+$("#nav").innerHTML=VIEWS.map(v=>`<a href="#${v[0]}" data-v="${v[0]}">${v[1]}</a>`).join("");
+function route(){
+  let id=location.hash.slice(1); if(!VIEWS.some(v=>v[0]===id)) id="home";
+  $$(".view[id^='v-']").forEach(v=>v.hidden=v.id!=="v-"+id);
+  $$("#nav a").forEach(a=>{const on=a.dataset.v===id;a.setAttribute("aria-current",on?"page":"false");if(on)a.scrollIntoView({inline:"center",block:"nearest"})});
+  window.scrollTo(0,0);
+}
+addEventListener("hashchange",route);
+
+/* ---------- home ---------- */
+const MODS=[
+  ["map","Campus map","Find every block and get a walking estimate.","--t-acad"],
+  ["schedule","My schedule","Classes, free time and busy time.","--accent"],
+  ["rooms","Free rooms","Empty rooms and labs right now.","--t-lab"],
+  ["store","Sports store","What is on the shelf. Reserve ahead.","--t-sport"],
+  ["events","Events","Small and big, national and international.","--t-food"],
+  ["jobs","Jobs","Part-time, internships and research.","--t-ground"],
+  ["library","Library","Books by section and copies available.","--t-lib"],
+  ["cafeteria","Cafeteria","Today's menu and portions left.","--t-food"],
+  ["admin","Admin panel","Staff updates for every module.","--t-admin"]
+];
+function renderHome(){
+  $("#today").innerHTML=`<span class="pill info">${TODAY.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"})}</span><span class="pill mute">Cafeteria open 8:00 to 17:00</span><span class="pill mute">${state.events.length} upcoming events</span><span class="pill mute">${state.jobs.length} open jobs</span>`;
+  $("#mods").innerHTML=MODS.map(m=>`<a class="mod" href="#${m[0]}"><h3><span class="dot" style="--c:var(${m[3]})"></span>${m[1]}</h3><p>${m[2]}</p></a>`).join("");
+  $("#notices").innerHTML=state.notices.slice().reverse().slice(0,5).map(n=>`<li><time>${fmt(n.d,{day:"numeric",month:"short"})}</time><span>${esc(n.t)}</span></li>`).join("");
+  const ev=state.events.slice().sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);
+  $("#home-events").innerHTML=ev.map(e=>`<li><time>${fmt(e.date,{day:"numeric",month:"short"})}</time><span><b>${esc(e.title)}</b><br><span class="muted small">${esc(e.venue)}</span></span></li>`).join("");
+}
+
+/* ---------- map ---------- */
+const BLOCKS=[
+  {id:"a",name:["Academic","Block A"],t:"acad",x:40,y:40,w:170,h:90,info:"Classrooms A-101 to A-105 on floor 1 and A-201 to A-205 on floor 2. CS department office.",link:["schedule","Open a timetable"]},
+  {id:"b",name:["Academic","Block B"],t:"acad",x:40,y:160,w:170,h:90,info:"Classrooms B-101 to B-105 on floor 1 and B-201 to B-205 on floor 2. IT department office.",link:["schedule","Open a timetable"]},
+  {id:"c",name:["Academic","Block C"],t:"acad",x:40,y:280,w:170,h:90,info:"Classrooms C-101 to C-105 on floor 1 and C-201 to C-205 on floor 2. SE department office.",link:["schedule","Open a timetable"]},
+  {id:"lab",name:["Lab","Block"],t:"lab",x:250,y:40,w:150,h:110,info:"Lab-1 to Lab-5. The PF Lab (C++) runs in Lab-2.",link:["rooms","Find a free lab"]},
+  {id:"lib",name:["Library"],t:"lib",x:250,y:180,w:150,h:90,info:"Sections for English, Urdu, Computer Programming, Mathematics and Physics.",link:["library","Browse books"]},
+  {id:"adm",name:["Admin","Block"],t:"admin",x:250,y:300,w:150,h:70,info:"Admin office, events office and the notice board. Timetables, events and jobs are updated from here.",link:["admin","Open admin panel"]},
+  {id:"caf",name:["Cafeteria"],t:"food",x:440,y:40,w:110,h:90,info:"Open 8:00 to 17:00. Today's menu and portions left are on the cafeteria page.",link:["cafeteria","See today's menu"]},
+  {id:"spt",name:["Sports","Store"],t:"sport",x:580,y:40,w:100,h:90,info:"Rackets, balls, bats and more, issued against your ID card. Check stock before you go.",link:["store","See what is available"]},
+  {id:"gnd",name:["Sports Ground"],t:"ground",x:440,y:170,w:240,h:140,info:"Open ground. It has no booking or live status, so the store is the place to check for equipment.",link:null},
+  {id:"gate",name:["Main Gate"],t:"admin",x:440,y:340,w:240,h:40,info:"Entry point with the security desk and visitor check-in.",link:null}
+];
+const TYPES=[["acad","Academic"],["lab","Labs"],["lib","Library"],["food","Cafeteria"],["sport","Sports"],["ground","Ground"],["admin","Admin and gate"]];
+const ctr=b=>[b.x+b.w/2,b.y+b.h/2];
+function renderMap(){
+  const label=b=>b.name.length===1?`<text class="blk-t" x="${ctr(b)[0]}" y="${ctr(b)[1]+7}">${b.name[0]}</text>`:`<text class="blk-t" x="${ctr(b)[0]}" y="${ctr(b)[1]-3}">${b.name[0]}</text><text class="blk-t" x="${ctr(b)[0]}" y="${ctr(b)[1]+20}">${b.name[1]}</text>`;
+  const from=BLOCKS.find(b=>b.id===$("#r-from").value), to=BLOCKS.find(b=>b.id===$("#r-to").value);
+  let route="";
+  if(from&&to&&from.id!==to.id){const[a,b]=[ctr(from),ctr(to)];route=`<line class="route" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/><circle cx="${a[0]}" cy="${a[1]}" r="7" fill="var(--ink)"/><circle cx="${b[0]}" cy="${b[1]}" r="7" fill="var(--accent)"/>`}
+  $("#map").innerHTML=BLOCKS.map(b=>`<g class="blk-g${b.id===state.block?" sel":""}" data-b="${b.id}" tabindex="0" role="button" aria-label="${esc(b.name.join(" "))}"><rect class="blk" style="--t:var(--t-${b.t})" x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="10"/>${label(b)}</g>`).join("")+route;
+  const b=BLOCKS.find(x=>x.id===state.block);
+  $("#blk-info").innerHTML=`<h3 style="margin-bottom:8px">${esc(b.name.join(" "))}</h3><p class="muted" style="margin-bottom:14px">${esc(b.info)}</p>${b.link?`<a class="btn ghost sm" href="#${b.link[0]}" style="text-decoration:none;display:inline-block">${b.link[1]}</a>`:""}`;
+  const out=$("#route-out");
+  if(from&&to&&from.id!==to.id){const d=Math.hypot(ctr(from)[0]-ctr(to)[0],ctr(from)[1]-ctr(to)[1]);const m=Math.max(1,Math.round(d*1.1/75));out.innerHTML=`<b style="color:var(--ink)">${esc(from.name.join(" "))}</b> to <b style="color:var(--ink)">${esc(to.name.join(" "))}</b>: about ${m} minute${m>1?"s":""} on foot.`}
+  else out.textContent="Pick two different places to draw a route.";
+}
+$("#legend").innerHTML=TYPES.map(t=>`<span><i class="dot" style="--c:var(--t-${t[0]})"></i>${t[1]}</span>`).join("");
+const blockOpts=BLOCKS.map(b=>`<option value="${b.id}">${b.name.join(" ")}</option>`).join("");
+$("#r-from").innerHTML=blockOpts; $("#r-to").innerHTML=blockOpts; $("#r-from").value="gate"; $("#r-to").value="lab";
+$("#r-from").onchange=$("#r-to").onchange=renderMap;
+$("#map").addEventListener("click",e=>{const g=e.target.closest("[data-b]");if(g){state.block=g.dataset.b;renderMap()}});
+$("#map").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){const g=e.target.closest("[data-b]");if(g){e.preventDefault();state.block=g.dataset.b;renderMap();$(`[data-b="${g.dataset.b}"]`).focus()}}});
+
+/* ---------- schedule ---------- */
+$("#s-day").innerHTML=DAYS.map((d,i)=>`<option${i===dayIdx?" selected":""}>${d}</option>`).join("");
+function renderSchedule(){
+  const roll=$("#s-roll").value.trim(), dept=$("#s-dept").value, sec=$("#s-sec").value, day=$("#s-day").value;
+  const out=$("#s-out");
+  if(!/^[A-Za-z0-9-]{3,20}$/.test(roll)){out.innerHTML=`<div class="card"><span class="pill bad">Check your roll number</span><p class="muted" style="margin-top:8px">Use 3 to 20 letters, digits or dashes, like 26-CS-014.</p></div>`;return}
+  const tt=ALL_TT[dept+"-"+sec][day];
+  const busy=tt.filter(Boolean).length, free=5-busy;
+  const showNow=day===dayName&&curSlot>=0;
+  let next=null; if(day===dayName){for(let i=0;i<5;i++){if(tt[i]&&toMin(SLOTS[i][0])>nowMin){next=i;break}}}
+  out.innerHTML=`
+    <div class="card"><div class="row" style="justify-content:space-between;margin-bottom:14px"><h3>${esc(roll.toUpperCase())} · ${dept}-${sec} · ${day}</h3><span class="pill info">Sample timetable</span></div>
+    <div class="stats"><div class="stat"><b>${busy}</b><span>classes</span></div><div class="stat"><b>${(busy*1.5).toFixed(1)} h</b><span>busy time</span></div><div class="stat"><b>${(free*1.5).toFixed(1)} h</b><span>free time</span></div></div>
+    ${day===dayName?`<p class="muted" style="margin-top:14px">${next!==null?`Next class: <b style="color:var(--ink)">${esc(tt[next].name)}</b> in ${esc(tt[next].room)} at ${SLOTS[next][0]}.`:"No more classes today."}</p>`:""}</div>
+    <ul class="slots">${tt.map((c,i)=>`<li class="slot ${c?"busy":"free"}${showNow&&i===curSlot?" now":""}"><span class="time">${SLOTS[i][0]} to ${SLOTS[i][1]}</span><span class="what">${c?`<b>${esc(c.name)}</b>`:"Free slot"}</span>${c?`<span class="pill info">${esc(c.room)}</span>`:`<span class="pill good">Free</span>`}</li>`).join("")}</ul>`;
+}
+$("#s-form").addEventListener("submit",e=>{e.preventDefault();renderSchedule()});
+
+/* ---------- rooms ---------- */
+$("#f-day").innerHTML=DAYS.map((d,i)=>`<option${i===dayIdx?" selected":""}>${d}</option>`).join("");
+$("#f-slot").innerHTML=SLOTS.map((s,i)=>`<option value="${i}"${i===(curSlot>=0?curSlot:0)?" selected":""}>${s[0]} to ${s[1]}</option>`).join("");
+const ROOMS={A:[],B:[],C:[],Labs:["Lab-1","Lab-2","Lab-3","Lab-4","Lab-5"]};
+["A","B","C"].forEach(b=>[1,2].forEach(f=>[1,2,3,4,5].forEach(n=>ROOMS[b].push(`${b}-${f}0${n}`))));
+function renderRooms(){
+  const day=$("#f-day").value, slot=+$("#f-slot").value, used={};
+  Object.keys(ALL_TT).forEach(k=>{const c=ALL_TT[k][day][slot];if(c)used[c.room]=k+": "+c.name});
+  const all=Object.values(ROOMS).flat(), freeN=all.filter(r=>!used[r]).length;
+  $("#f-out").innerHTML=`<div class="row" style="justify-content:space-between"><h3>${freeN} of ${all.length} rooms free</h3><span class="pill info">${day}, ${SLOTS[slot][0]} to ${SLOTS[slot][1]}</span></div>`+
+    Object.entries(ROOMS).map(([g,list])=>`<div class="group-title">${g==="Labs"?"Labs":"Block "+g}</div><div class="rooms-grid">${list.map(r=>`<span class="room ${used[r]?"busy":"free"}" title="${esc(used[r]||"Free")}">${r}</span>`).join("")}</div>`).join("")+
+    `<p class="small muted" style="margin-top:16px">Crossed-out rooms have a class in this slot.</p>`;
+}
+$("#f-day").onchange=$("#f-slot").onchange=renderRooms;
+
+/* ---------- sports store ---------- */
+$("#res-slot").innerHTML=["09:00","10:00","11:00","12:00","14:00","15:00","16:00"].map(t=>`<option>${t}</option>`).join("");
+const avail=it=>it.total-it.out-it.res;
+function renderStore(){
+  const k=state.keeper, q=state.stQ.toLowerCase();
+  $("#keeper-toggle").textContent="Keeper mode: "+(k?"on":"off"); $("#keeper-toggle").setAttribute("aria-pressed",k);
+  const list=state.store.map((it,i)=>[it,i]).filter(([it])=>it.name.toLowerCase().includes(q));
+  $("#store-list").innerHTML=list.length?list.map(([it,i])=>{
+    const av=avail(it), st=av===0?["bad","None left"]:av<=2?["warn","Low stock"]:["good","Available"], pct=it.total?Math.round(av/it.total*100):0;
+    return `<li class="itm"><div class="itm-top"><strong>${esc(it.name)}</strong><span class="pill ${st[0]}">${st[1]}</span></div>
+      <div class="bar" role="img" aria-label="${av} of ${it.total} available"><i style="width:${pct}%"></i></div>
+      <div class="itm-meta"><span><b>${av}</b> available</span><span><b>${it.total}</b> total</span><span><b>${it.out}</b> issued</span><span><b>${it.res}</b> reserved</span></div>
+      <div class="itm-act">${k?`<button class="btn ghost sm" data-act="issue" data-i="${i}" ${av?"":"disabled"}>Issue 1</button><button class="btn ghost sm" data-act="return" data-i="${i}" ${it.out?"":"disabled"}>Return 1</button><button class="btn ghost sm" data-act="add" data-i="${i}">Add stock</button><button class="btn ghost sm" data-act="remove" data-i="${i}" ${it.total>it.out+it.res?"":"disabled"}>Remove stock</button>`:`<button class="btn ghost sm" data-act="reserve" data-i="${i}" ${av?"":"disabled"}>Reserve</button>`}</div></li>`}).join(""):`<li class="card">No items match your search.</li>`;
+  $("#resv").innerHTML=state.resv.length?state.resv.map((r,i)=>`<li><span><b>${esc(r.item)}</b><br><span class="muted small">ID ${k?esc(r.id):"•••• "+esc(r.id.slice(-2))} · pick-up ${esc(r.slot)}</span></span>${k?`<span class="row" style="gap:6px"><button class="btn ghost sm" data-act="pickup" data-i="${i}">Picked up</button><button class="btn ghost sm" data-act="cancel" data-i="${i}">Cancel</button></span>`:""}</li>`).join(""):`<li class="muted">No reservations right now.</li>`;
+}
+$("#keeper-toggle").onclick=()=>{state.keeper=!state.keeper;renderStore();toast(state.keeper?"Keeper mode on":"Keeper mode off")};
+$("#st-q").oninput=e=>{state.stQ=e.target.value;renderStore()};
+$("#res-panel").addEventListener("submit",e=>{
+  e.preventDefault();
+  const id=$("#res-id").value.trim(), it=state.store[state.sel];
+  if(!it||avail(it)<1){toast("Nothing left to reserve");return}
+  if(!/^[A-Za-z0-9-]{3,20}$/.test(id)){toast("Enter your university ID");return}
+  it.res++; state.resv.push({item:it.name,id,slot:$("#res-slot").value});
+  $("#res-panel").hidden=true; state.sel=-1; $("#res-id").value="";
+  renderStore(); toast("Reserved. Collect it at your slot.");
+});
+
+/* ---------- events ---------- */
+function renderEvents(){
+  const types=["All",...new Set(state.events.map(e=>e.type))];
+  if(!types.includes(state.evType)) state.evType="All";
+  $("#ev-chips").innerHTML=types.map(t=>`<button class="chip" data-act="evtype" data-v="${esc(t)}" aria-pressed="${t===state.evType}">${esc(t)}</button>`).join("");
+  const list=state.events.filter(e=>state.evType==="All"||e.type===state.evType).sort((a,b)=>a.date.localeCompare(b.date));
+  $("#ev-list").innerHTML=list.map(e=>`<article class="ev"><div class="datebox"><b>${fmt(e.date,{day:"numeric"})}</b><span>${fmt(e.date,{month:"short"})}</span></div><div><h3>${esc(e.title)}</h3><div class="tags" style="margin-bottom:8px"><span class="pill info">${esc(e.type)}</span><span class="pill mute">${when(e.date)}</span></div><p class="muted small">${esc(e.desc||"")}</p><p class="small" style="margin-top:6px"><b>Venue:</b> ${esc(e.venue)}</p></div></article>`).join("")||`<p class="muted">No events in this category yet.</p>`;
+}
+
+/* ---------- jobs ---------- */
+function renderJobs(){
+  const depts=["All","CS","IT","SE"];
+  $("#job-chips").innerHTML=depts.map(d=>`<button class="chip" data-act="jobdept" data-v="${d}" aria-pressed="${d===state.jobDept}">${d==="All"?"All departments":d}</button>`).join("");
+  const list=state.jobs.filter(j=>state.jobDept==="All"||j.dept===state.jobDept||j.dept==="All").sort((a,b)=>a.deadline.localeCompare(b.deadline));
+  $("#job-list").innerHTML=list.map(j=>`<article class="job"><div><h3>${esc(j.title)}</h3></div><div class="tags"><span class="pill info">${esc(j.type)}</span><span class="pill mute">${j.dept==="All"?"All departments":esc(j.dept)}</span></div><dl class="kv"><dt>Hours</dt><dd>${esc(j.hours||"To be agreed")}</dd><dt>Apply by</dt><dd>${fmt(j.deadline,{day:"numeric",month:"short"})} (${when(j.deadline).toLowerCase()})</dd><dt>Needs</dt><dd>${esc(j.req||"")}</dd><dt>Contact</dt><dd>${esc(j.contact||"Admin Block")}</dd></dl></article>`).join("")||`<p class="muted">No jobs for this department yet.</p>`;
+}
+
+/* ---------- library ---------- */
+function renderLib(){
+  const secs=["All",...Object.keys(LIB)], q=state.libQ.toLowerCase();
+  $("#lib-chips").innerHTML=secs.map(s=>`<button class="chip" data-act="libsec" data-v="${esc(s)}" aria-pressed="${s===state.libSec}">${s}</button>`).join("");
+  const html=Object.entries(LIB).filter(([s])=>state.libSec==="All"||s===state.libSec).map(([s,books])=>{
+    const rows=books.filter(b=>!q||b[0].toLowerCase().includes(q)||b[1].toLowerCase().includes(q));
+    if(!rows.length) return "";
+    return `<div class="card"><h3 style="margin-bottom:6px">${s}</h3><div class="shelf">${rows.map(b=>`<div class="book"><span><b>${esc(b[0])}</b><br><span class="who">${esc(b[1])}</span></span><span class="pill ${b[2]===0?"bad":b[2]<=2?"warn":"good"}">${b[2]===0?"None on shelf":b[2]+(b[2]===1?" copy":" copies")}</span></div>`).join("")}</div></div>`}).join("");
+  $("#lib-list").innerHTML=html||`<p class="muted">No books match your search.</p>`;
+}
+$("#lib-q").oninput=e=>{state.libQ=e.target.value;renderLib()};
+
+/* ---------- cafeteria ---------- */
+function renderCafe(){
+  $("#caf-lead").textContent=`Today's menu for ${TODAY.toLocaleDateString("en-GB",{weekday:"long"})}. Open 8:00 to 17:00. Portions are updated through the day.`;
+  $("#menu").innerHTML=state.cafe.map(m=>{const st=m.left===0?["bad","Sold out"]:m.left<=10?["warn",m.left+" left"]:["good","Available"];return `<li><span><b>${esc(m.name)}</b></span><span class="price">Rs ${m.price}</span><span class="pill ${st[0]}">${st[1]}</span></li>`}).join("");
+}
+
+/* ---------- admin ---------- */
+function renderAdmin(){
+  const body=$("#admin-body");
+  if(!state.admin){
+    body.innerHTML=`<form class="card" id="a-login"><div class="form-grid"><div class="field"><label for="a-pass">Password</label><input id="a-pass" type="password" autocomplete="off"></div><button class="btn" type="submit">Log in</button></div><p class="small muted" style="margin-top:10px">Demo password: admin123</p></form>`;
+    return;
+  }
+  const typeOpts=["Academic","Sports","Society","Community","National","International"].map(t=>`<option>${t}</option>`).join("");
+  body.innerHTML=`
+    <div class="row" style="justify-content:space-between"><span class="pill good">Logged in as admin</span><button class="btn ghost sm" data-act="logout">Log out</button></div>
+    <div class="split">
+      <form class="card" id="a-notice"><h3 style="margin-bottom:12px">Post a notice</h3><div class="field"><label for="n-text">Notice</label><textarea id="n-text"></textarea></div><button class="btn" type="submit" style="margin-top:12px">Post notice</button></form>
+      <form class="card" id="a-event"><h3 style="margin-bottom:12px">Add an event</h3><div class="form-grid"><div class="field"><label for="e-title">Title</label><input id="e-title"></div><div class="field"><label for="e-date">Date</label><input id="e-date" type="date" value="${isoPlus(7)}"></div><div class="field"><label for="e-venue">Venue</label><input id="e-venue"></div><div class="field"><label for="e-type">Type</label><select id="e-type">${typeOpts}</select></div></div><button class="btn" type="submit" style="margin-top:12px">Add event</button></form>
+      <form class="card" id="a-job"><h3 style="margin-bottom:12px">Add a job</h3><div class="form-grid"><div class="field"><label for="j-title">Title</label><input id="j-title"></div><div class="field"><label for="j-dept">Department</label><select id="j-dept"><option>All</option><option>CS</option><option>IT</option><option>SE</option></select></div><div class="field"><label for="j-type">Type</label><select id="j-type"><option>Part-time</option><option>Internship</option><option>Research</option><option>Volunteer</option></select></div><div class="field"><label for="j-date">Apply by</label><input id="j-date" type="date" value="${isoPlus(14)}"></div></div><button class="btn" type="submit" style="margin-top:12px">Add job</button></form>
+      <div class="card"><h3 style="margin-bottom:12px">Cafeteria portions</h3><ul class="menu">${state.cafe.map((m,i)=>`<li style="grid-template-columns:1fr auto"><span>${esc(m.name)}</span><span class="stepper"><button class="btn ghost sm" data-act="cafe-" data-i="${i}" aria-label="Fewer ${esc(m.name)}">-</button><output>${m.left}</output><button class="btn ghost sm" data-act="cafe+" data-i="${i}" aria-label="More ${esc(m.name)}">+</button></span></li>`).join("")}</ul></div>
+    </div>`;
+}
+$("#admin-body").addEventListener("submit",e=>{
+  e.preventDefault(); const id=e.target.id;
+  if(id==="a-login"){ if($("#a-pass").value==="admin123"){state.admin=true;renderAdmin();toast("Welcome back")}else toast("Wrong password"); return }
+  if(id==="a-notice"){ const t=$("#n-text").value.trim(); if(!t){toast("Write the notice first");return} state.notices.push({t,d:isoPlus(0)}); renderHome(); $("#n-text").value=""; toast("Notice posted"); return }
+  if(id==="a-event"){ const title=$("#e-title").value.trim(), venue=$("#e-venue").value.trim(), date=$("#e-date").value; if(!title||!venue||!date){toast("Fill in title, date and venue");return} state.events.push({title,venue,date,type:$("#e-type").value,desc:""}); renderEvents(); renderHome(); renderAdmin(); toast("Event added"); return }
+  if(id==="a-job"){ const title=$("#j-title").value.trim(), date=$("#j-date").value; if(!title||!date){toast("Fill in title and deadline");return} state.jobs.push({title,dept:$("#j-dept").value,type:$("#j-type").value,deadline:date,hours:"",req:"",contact:"Admin Block"}); renderJobs(); renderHome(); renderAdmin(); toast("Job added"); return }
+});
+
+/* ---------- shared clicks ---------- */
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-act]"); if(!b) return;
+  const a=b.dataset.act, i=+b.dataset.i, v=b.dataset.v;
+  if(a==="evtype"){state.evType=v;renderEvents()}
+  else if(a==="jobdept"){state.jobDept=v;renderJobs()}
+  else if(a==="libsec"){state.libSec=v;renderLib()}
+  else if(a==="logout"){state.admin=false;renderAdmin()}
+  else if(a==="cafe+"||a==="cafe-"){state.cafe[i].left=Math.max(0,state.cafe[i].left+(a==="cafe+"?1:-1));renderAdmin();renderCafe()}
+  else if(a==="reserve"){state.sel=i;$("#res-title").textContent="Reserve: "+state.store[i].name;$("#res-panel").hidden=false;$("#res-id").focus();$("#res-panel").scrollIntoView({block:"nearest",behavior:"smooth"})}
+  else if(["issue","return","add","remove"].includes(a)){
+    const it=state.store[i];
+    if(a==="issue"&&avail(it)>0)it.out++;
+    if(a==="return"&&it.out>0)it.out--;
+    if(a==="add")it.total++;
+    if(a==="remove"&&it.total>it.out+it.res)it.total--;
+    renderStore();
+  }
+  else if(a==="pickup"||a==="cancel"){
+    const r=state.resv[i], it=state.store.find(x=>x.name===r.item);
+    if(it){it.res=Math.max(0,it.res-1);if(a==="pickup")it.out++}
+    state.resv.splice(i,1); renderStore(); toast(a==="pickup"?"Marked as picked up":"Reservation cancelled");
+  }
+});
+
+/* ---------- console preview ---------- */
+(function(){
+  const W=38, items=["1. Campus Map","2. My Schedule","3. Free Rooms","4. Sports Store","5. Events","6. Jobs","7. Library","8. Cafeteria","9. Admin Login","0. Exit"];
+  const line=t=>"║  "+t.padEnd(W-2)+"║";
+  const title="C A M P U S C O N N E C T";
+  const lines=["╔"+"═".repeat(W)+"╗","║"+" ".repeat(Math.floor((W-title.length)/2))+title+" ".repeat(W-title.length-Math.floor((W-title.length)/2))+"║","╠"+"═".repeat(W)+"╣",...items.map(line),"╚"+"═".repeat(W)+"╝"," Enter choice: _"];
+  $("#console").textContent=lines.join("\n");
+})();
+
+/* ---------- boot ---------- */
+renderHome(); renderMap(); renderSchedule(); renderRooms(); renderStore(); renderEvents(); renderJobs(); renderLib(); renderCafe(); renderAdmin(); route();
+</script>
+
+</body></html>
